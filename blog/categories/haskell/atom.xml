@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Haskell | Lambda Not Found]]></title>
   <link href="http://innocentim.github.io/blog/categories/haskell/atom.xml" rel="self"/>
   <link href="http://innocentim.github.io/"/>
-  <updated>2013-04-12T21:36:31+08:00</updated>
+  <updated>2013-04-12T22:15:55+08:00</updated>
   <id>http://innocentim.github.io/</id>
   <author>
     <name><![CDATA[Tim Shen]]></name>
@@ -20,7 +20,7 @@
     <id>http://innocentim.github.io/blog/2013/04/10/coursera-prolang-3</id>
     <content type="html"><![CDATA[<p>Dan说如果时间允许, Haskell也将被讨论. 当然, 时间总是不允许的.</p>
 
-<p>于是我看完SML之后就很不知趣地去啃Haskell. 然后我现在就是一个接触Haskell累计不超过一周的水货, 但是这并不妨碍我发表一些无关痛痒/<em>咦?</em>/的并且很有可能失偏颇的断章取义的评论. Haskell和SML有不少相似的地方, 但是我今天想讨论的是其不同的地方. 最大的不同, 在我看来, 是Haskell允许用户定义type class.</p>
+<p>于是我看完SML之后就很不知趣地去啃Haskell. 然后我现在就是一个接触Haskell累计不超过一周的水货, 但是这并不妨碍我发表一些无关痛痒(咦?)的并且很有可能失偏颇的断章取义的评论. Haskell和SML有不少相似的地方, 但是我今天想讨论的是其不同的地方. 最大的不同, 在我看来, 是Haskell允许用户定义type class.</p>
 
 <p>有两个基本的前置科技要点 : 模板(C++)/泛型(Java或SML)和纯虚类(C++)/接口(Java).</p>
 
