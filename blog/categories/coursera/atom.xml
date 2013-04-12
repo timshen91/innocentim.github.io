@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Coursera | Lambda Not Found]]></title>
   <link href="http://innocentim.github.io/blog/categories/coursera/atom.xml" rel="self"/>
   <link href="http://innocentim.github.io/"/>
-  <updated>2013-04-12T21:32:39+08:00</updated>
+  <updated>2013-04-12T21:36:31+08:00</updated>
   <id>http://innocentim.github.io/</id>
   <author>
     <name><![CDATA[Tim Shen]]></name>
@@ -12,72 +12,6 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
-  
-  <entry>
-    <title type="html"><![CDATA[Coursera Prolang总结1(SML)]]></title>
-    <link href="http://innocentim.github.io/blog/2013/04/12/coursera-prolang-1/"/>
-    <updated>2013-04-12T09:33:00+08:00</updated>
-    <id>http://innocentim.github.io/blog/2013/04/12/coursera-prolang-1</id>
-    <content type="html"><![CDATA[<p>Coursera的<a href="https://class.coursera.org/proglang-2012-001/class/index">Programming Languages</a>是个难得的好课. 虽然课时较短, 时间仓促, 但是它确实提供了高密度的知识吸收, 并且让我更谦卑. Instructor是University of Washington的Dan Grossman, 一个讲课非常热情的老师(横向地, Compilers的老师就没这么激情:P). 这门课通过分析三门语言 : SML, Racket 和 Ruby, 介绍了很多程序语言概念, 从而让我对语言设计积攒了更多经验值. 这绝对比自己看语言们的tutorials划得来.</p>
-
-<p>下面是我从SML的学习中获得的经验的不完全列表:</p>
-
-<h3>一种更为神奇的变量绑定方式</h3>
-
-<p>函数对非参数变量的捕捉被设计为在定义时捕捉好值, 此后便不再改变(更immutable). 这使得函数在执行时根本不关心外围环境, 更优雅, 更利于分析和优化(当然也更inexpressive).</p>
-
-<h3>Pattern Matching</h3>
-
-<p>Pattern Matching很像一个constructor的逆运算, 也许可以称作destructor :). 这里的constructor当然不是主流语言中那么随意的一个函数, 而是产生新类型的一种方式. 一个constructor创建一种新的类型, 并可以用BNF风格的语法定义该类型.</p>
-
-<p>一个典型的例子是定义<code>List 'a := EmptyList | Cons 'a * ('a List)</code>. 这样便定义了一个范型类型<code>List</code>, 而该类型有两个构造函数, 即<code>EmptyList</code>和<code>Cons</code>.</p>
-
-<p>这种构造函数本身没什么逻辑可言, 就是负责类型的转换. 但是就是因为足够简单, 他们是可逆的 : <code>Cons</code>负责包装一个<code>'a * ('a List)</code>(star表示元组), 而在模式匹配中, 轻易地, <code>Cons (head, tail) =&gt; someList</code>将轻易地拆分someList这个元组并将相应成员填充到指定变量head和tail中.</p>
-
-<p>我们知道BNF可以描述上下文无关文法, 强大到足以描述很多语言; 这恰恰为SML提供了很强的数据结构包装器和解包器.</p>
-
-<h3>非常赞的类型系统</h3>
-
-<p>SML拥有"每个函数体是一个表达式"和"每个表达式有确定的返回类型"这种强约束. 这带来的直接后果是写SML代码比较难编译通过, 但是一旦编译通过就很少有错误.</p>
-
-<p>为了更expressive, SML有范型系统. 不像C++丑陋的模板系统, SML能完美地推断出每个类型参数是什么或者哪类类型, 每个函数调用填入了什么类型, 将哪个类型参数绑定到哪个具体类型上了. 这极大地弥补了强类型系统的completeness而且没怎么降低soundness.</p>
-
-<p>关于在强约束下做函数定义的类型推断, 请<a href="/blog/2013/04/12/coursera-prolang-2/">参看这篇</a>...</p>
-
-<p>顺带说一句, SML主流的缩进风格让我非常难受 : 他们很容易让我写出很靠右的代码(这种"一句话描述函数体"的语言似乎都有这个毛病). 相比之下C/C++规整的indent level更吸引人. 我还想起了Emacs有个叫SmartTab的插件倡导"用Tab表示indent level, 用空格对齐"噗.</p>
-
-<p>Dan is awesome!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Coursera Prolang总结2(实现SML中的类型推导)]]></title>
-    <link href="http://innocentim.github.io/blog/2013/04/12/coursera-prolang-2/"/>
-    <updated>2013-04-12T09:27:00+08:00</updated>
-    <id>http://innocentim.github.io/blog/2013/04/12/coursera-prolang-2</id>
-    <content type="html"><![CDATA[<p>SML是一门静态类型语言, 但是将值绑定新变量的时候可以不指定变量的类型. 这意味着每个变量都是"尽可能地宽松", 比如变量x, 开始时为范型'a, 但是编译器扫到一个a+1的表达式之后, 会自动把x的类型约束为int, 因为加号+的类型是int * int -> int, 即吃一个(int, int)的元组, 返回一个int.</p>
-
-<p>于是自动类型推导就成为一个有意思的活. 我刻意不去查阅相关资料, 做了些思考.</p>
-
-<p>要解决的问题是: 给定n个函数定义, 要推导出这n个函数的类型, 包括参数类型和返回类型.</p>
-
-<p>可以采用待定系数法类似的思路, 先设n个函数各类型为不同的范型参数a1, r1, a2, r2 ... an, rn.</p>
-
-<p>现在, n个函数体就是对这2n个变量的约束. 函数体是一个表达式. 表达式分为if, let, case ...等, 还有函数调用. 每个表达式都有可能包含一些别的表达式.</p>
-
-<p>if产生的约束比较简单, 即要求condition的返回值类型是bool, 要求then分支的返回值类型等于else分支的返回值类型.</p>
-
-<p>let也比较简单, 即binding的类型为相应expression返回类型; 整个表达式返回类型为in块中表达式返回类型.</p>
-
-<p>case稍微复杂些. 首先, patterns能对一个未完全确定的变量(通常是参数或其一部分)提供约束, 这部分在Coursera Prolang的作业中出现; 另外必须保证所有分支的expression的返回值一样, 并且这就是case表达式的返回类型.</p>
-
-<p>函数调用是比较意思的地方. 我们只需要整理出一个巨大的约束集即可, 集合的每个元素形式是: 类型A要能接受类型B. 这里的A和B都可以是"未完成推导的", 也可是是完成了的. 无论如何, A和B都将变成A和B的交集. 这种变化会产生连锁效应, 所以我们应该紧接着更新A的邻居和B的邻居. 这用教科书的话说叫Bellman-Ford, 用咱们的话说叫SPFA :P. 最终当迭代到不动的时候, 推导就完成了.</p>
-
-<p>所以我们需要能将两个类型求交集的能力. 我们把类型们分为两种: 已推导出和未推导出. 已推导出的肯定不能动; 未推导出的会把自己下降到能满足已推导约束的地步, 并且尽量lenient(Dan用的这个词). 如果两个都未推导出来, 那就互相下降自己的分支来满足对方相应的分支(一个类型的结构是一棵树); 当两个范型碰头的时候, 他们会变成同一个.</p>
-
-<p>然后我觉得就没有然后了. 可惜暂时不会去实现它>.&lt;</p>
-]]></content>
-  </entry>
   
   <entry>
     <title type="html"><![CDATA[Coursera Prolang总结3(Haskell的type class)]]></title>
@@ -207,6 +141,72 @@ protected boolean equalEmpty() {
 <p>如果我们把a.b(c)看成b(a, c), 那么类型系统会<em>仅</em>通过第一个参数的类型来产生各种约束. 为什么C++/Java要通过这种近乎hack的手段来突破类型系统呢? 啊哈, 原来是C++/Java不会做类型推导! 确实, C++的模板参数在很多情况下, 明明能推导出来, 但是就是要你手填T_T.</p>
 
 <p>在有强大的类型推导的语言里, 我们完全可以通过更灵活的策略来产生约束, 正如Haskell做的那样.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Coursera Prolang总结2(实现SML中的类型推导)]]></title>
+    <link href="http://innocentim.github.io/blog/2013/03/24/coursera-prolang-2/"/>
+    <updated>2013-03-24T09:27:00+08:00</updated>
+    <id>http://innocentim.github.io/blog/2013/03/24/coursera-prolang-2</id>
+    <content type="html"><![CDATA[<p>SML是一门静态类型语言, 但是将值绑定新变量的时候可以不指定变量的类型. 这意味着每个变量都是"尽可能地宽松", 比如变量x, 开始时为范型'a, 但是编译器扫到一个a+1的表达式之后, 会自动把x的类型约束为int, 因为加号+的类型是int * int -> int, 即吃一个(int, int)的元组, 返回一个int.</p>
+
+<p>于是自动类型推导就成为一个有意思的活. 我刻意不去查阅相关资料, 做了些思考.</p>
+
+<p>要解决的问题是: 给定n个函数定义, 要推导出这n个函数的类型, 包括参数类型和返回类型.</p>
+
+<p>可以采用待定系数法类似的思路, 先设n个函数各类型为不同的范型参数a1, r1, a2, r2 ... an, rn.</p>
+
+<p>现在, n个函数体就是对这2n个变量的约束. 函数体是一个表达式. 表达式分为if, let, case ...等, 还有函数调用. 每个表达式都有可能包含一些别的表达式.</p>
+
+<p>if产生的约束比较简单, 即要求condition的返回值类型是bool, 要求then分支的返回值类型等于else分支的返回值类型.</p>
+
+<p>let也比较简单, 即binding的类型为相应expression返回类型; 整个表达式返回类型为in块中表达式返回类型.</p>
+
+<p>case稍微复杂些. 首先, patterns能对一个未完全确定的变量(通常是参数或其一部分)提供约束, 这部分在Coursera Prolang的作业中出现; 另外必须保证所有分支的expression的返回值一样, 并且这就是case表达式的返回类型.</p>
+
+<p>函数调用是比较意思的地方. 我们只需要整理出一个巨大的约束集即可, 集合的每个元素形式是: 类型A要能接受类型B. 这里的A和B都可以是"未完成推导的", 也可是是完成了的. 无论如何, A和B都将变成A和B的交集. 这种变化会产生连锁效应, 所以我们应该紧接着更新A的邻居和B的邻居. 这用教科书的话说叫Bellman-Ford, 用咱们的话说叫SPFA :P. 最终当迭代到不动的时候, 推导就完成了.</p>
+
+<p>所以我们需要能将两个类型求交集的能力. 我们把类型们分为两种: 已推导出和未推导出. 已推导出的肯定不能动; 未推导出的会把自己下降到能满足已推导约束的地步, 并且尽量lenient(Dan用的这个词). 如果两个都未推导出来, 那就互相下降自己的分支来满足对方相应的分支(一个类型的结构是一棵树); 当两个范型碰头的时候, 他们会变成同一个.</p>
+
+<p>然后我觉得就没有然后了. 可惜暂时不会去实现它>.&lt;</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Coursera Prolang总结1(SML)]]></title>
+    <link href="http://innocentim.github.io/blog/2013/03/23/coursera-prolang-1/"/>
+    <updated>2013-03-23T09:33:00+08:00</updated>
+    <id>http://innocentim.github.io/blog/2013/03/23/coursera-prolang-1</id>
+    <content type="html"><![CDATA[<p>Coursera的<a href="https://class.coursera.org/proglang-2012-001/class/index">Programming Languages</a>是个难得的好课. 虽然课时较短, 时间仓促, 但是它确实提供了高密度的知识吸收, 并且让我更谦卑. Instructor是University of Washington的Dan Grossman, 一个讲课非常热情的老师(横向地, Compilers的老师就没这么激情:P). 这门课通过分析三门语言 : SML, Racket 和 Ruby, 介绍了很多程序语言概念, 从而让我对语言设计积攒了更多经验值. 这绝对比自己看语言们的tutorials划得来.</p>
+
+<p>下面是我从SML的学习中获得的经验的不完全列表:</p>
+
+<h3>一种更为神奇的变量绑定方式</h3>
+
+<p>函数对非参数变量的捕捉被设计为在定义时捕捉好值, 此后便不再改变(更immutable). 这使得函数在执行时根本不关心外围环境, 更优雅, 更利于分析和优化(当然也更inexpressive).</p>
+
+<h3>Pattern Matching</h3>
+
+<p>Pattern Matching很像一个constructor的逆运算, 也许可以称作destructor :). 这里的constructor当然不是主流语言中那么随意的一个函数, 而是产生新类型的一种方式. 一个constructor创建一种新的类型, 并可以用BNF风格的语法定义该类型.</p>
+
+<p>一个典型的例子是定义<code>List 'a := EmptyList | Cons 'a * ('a List)</code>. 这样便定义了一个范型类型<code>List</code>, 而该类型有两个构造函数, 即<code>EmptyList</code>和<code>Cons</code>.</p>
+
+<p>这种构造函数本身没什么逻辑可言, 就是负责类型的转换. 但是就是因为足够简单, 他们是可逆的 : <code>Cons</code>负责包装一个<code>'a * ('a List)</code>(star表示元组), 而在模式匹配中, 轻易地, <code>Cons (head, tail) =&gt; someList</code>将轻易地拆分someList这个元组并将相应成员填充到指定变量head和tail中.</p>
+
+<p>我们知道BNF可以描述上下文无关文法, 强大到足以描述很多语言; 这恰恰为SML提供了很强的数据结构包装器和解包器.</p>
+
+<h3>非常赞的类型系统</h3>
+
+<p>SML拥有"每个函数体是一个表达式"和"每个表达式有确定的返回类型"这种强约束. 这带来的直接后果是写SML代码比较难编译通过, 但是一旦编译通过就很少有错误.</p>
+
+<p>为了更expressive, SML有范型系统. 不像C++丑陋的模板系统, SML能完美地推断出每个类型参数是什么或者哪类类型, 每个函数调用填入了什么类型, 将哪个类型参数绑定到哪个具体类型上了. 这极大地弥补了强类型系统的completeness而且没怎么降低soundness.</p>
+
+<p>关于在强约束下做函数定义的类型推断, 请<a href="/blog/2013/04/12/coursera-prolang-2/">参看这篇</a>...</p>
+
+<p>顺带说一句, SML主流的缩进风格让我非常难受 : 他们很容易让我写出很靠右的代码(这种"一句话描述函数体"的语言似乎都有这个毛病). 相比之下C/C++规整的indent level更吸引人. 我还想起了Emacs有个叫SmartTab的插件倡导"用Tab表示indent level, 用空格对齐"噗.</p>
+
+<p>Dan is awesome!</p>
 ]]></content>
   </entry>
   
