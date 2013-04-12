@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Coursera Prolang总结1(SML) - Lambda Not Found</title>
+  <meta name="author" content="Tim Shen">
+
+  
+  <meta name="description" content="Coursera的Programming Languages是个难得的好课. 虽然课时较短, 时间仓促, 但是它确实提供了高密度的知识吸收, 并且让我更谦卑. Instructor是University of Washington的Dan Grossman, 一个讲课非常热情的老师(横向地, &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://innocentim.github.io/blog/2013/04/12/coursera-prolang-1">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Lambda Not Found" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Lambda Not Found</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:innocentim.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Coursera Prolang总结1(SML)</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-12T09:33:00+08:00" pubdate data-updated="true">Apr 12<span>th</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Coursera的<a href="https://class.coursera.org/proglang-2012-001/class/index">Programming Languages</a>是个难得的好课. 虽然课时较短, 时间仓促, 但是它确实提供了高密度的知识吸收, 并且让我更谦卑. Instructor是University of Washington的Dan Grossman, 一个讲课非常热情的老师(横向地, Compilers的老师就没这么激情:P). 这门课通过分析三门语言 : SML, Racket 和 Ruby, 介绍了很多程序语言概念, 从而让我对语言设计积攒了更多经验值. 这绝对比自己看语言们的tutorials划得来.</p>
+
+<p>下面是我从SML的学习中获得的经验的不完全列表:</p>
+
+<h3>一种更为神奇的变量绑定方式</h3>
+
+<p>函数对非参数变量的捕捉被设计为在定义时捕捉好值, 此后便不再改变(更immutable). 这使得函数在执行时根本不关心外围环境, 更优雅, 更利于分析和优化(当然也更inexpressive).</p>
+
+<h3>Pattern Matching</h3>
+
+<p>Pattern Matching很像一个constructor的逆运算, 也许可以称作destructor :). 这里的constructor当然不是主流语言中那么随意的一个函数, 而是产生新类型的一种方式. 一个constructor创建一种新的类型, 并可以用BNF风格的语法定义该类型.</p>
+
+<p>一个典型的例子是定义<code>List 'a := EmptyList | Cons 'a * ('a List)</code>. 这样便定义了一个范型类型<code>List</code>, 而该类型有两个构造函数, 即<code>EmptyList</code>和<code>Cons</code>.</p>
+
+<p>这种构造函数本身没什么逻辑可言, 就是负责类型的转换. 但是就是因为足够简单, 他们是可逆的 : <code>Cons</code>负责包装一个<code>'a * ('a List)</code>(star表示元组), 而在模式匹配中, 轻易地, <code>Cons (head, tail) =&gt; someList</code>将轻易地拆分someList这个元组并将相应成员填充到指定变量head和tail中.</p>
+
+<p>我们知道BNF可以描述上下文无关文法, 强大到足以描述很多语言; 这恰恰为SML提供了很强的数据结构包装器和解包器.</p>
+
+<h3>非常赞的类型系统</h3>
+
+<p>SML拥有&#8221;每个函数体是一个表达式&#8221;和&#8221;每个表达式有确定的返回类型&#8221;这种强约束. 这带来的直接后果是写SML代码比较难编译通过, 但是一旦编译通过就很少有错误.</p>
+
+<p>为了更expressive, SML有范型系统. 不像C++丑陋的模板系统, SML能完美地推断出每个类型参数是什么或者哪类类型, 每个函数调用填入了什么类型, 将哪个类型参数绑定到哪个具体类型上了. 这极大地弥补了强类型系统的completeness而且没怎么降低soundness.</p>
+
+<p>关于在强约束下做函数定义的类型推断, 请<a href="/blog/2013/04/12/coursera-prolang-2/">参看这篇</a>&#8230;</p>
+
+<p>顺带说一句, SML主流的缩进风格让我非常难受 : 他们很容易让我写出很靠右的代码(这种&#8221;一句话描述函数体&#8221;的语言似乎都有这个毛病). 相比之下C/C++规整的indent level更吸引人. 我还想起了Emacs有个叫SmartTab的插件倡导&#8221;用Tab表示indent level, 用空格对齐&#8221;噗.</p>
+
+<p>Dan is awesome!</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Tim Shen</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-12T09:33:00+08:00" pubdate data-updated="true">Apr 12<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/coursera/'>Coursera</a>, <a class='category' href='/blog/categories/sml/'>SML</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://innocentim.github.io/blog/2013/04/12/coursera-prolang-1/" data-via="innocentim" data-counturl="http://innocentim.github.io/blog/2013/04/12/coursera-prolang-1/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/04/12/coursera-prolang-2/" title="Previous Post: Coursera Prolang总结2(实现SML中的类型推导)">&laquo; Coursera Prolang总结2(实现SML中的类型推导)</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/04/12/coursera-prolang-1/">Coursera Prolang总结1(SML)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/04/12/coursera-prolang-2/">Coursera Prolang总结2(实现SML中的类型推导)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/04/10/coursera-prolang-3/">Coursera Prolang总结3(Haskell的type class)</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/innocentim">@innocentim</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'innocentim',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Tim Shen -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'tshen91';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://innocentim.github.io/blog/2013/04/12/coursera-prolang-1/';
+        var disqus_url = 'http://innocentim.github.io/blog/2013/04/12/coursera-prolang-1/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

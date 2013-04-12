@@ -1,0 +1,282 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Coursera Prolang总结2(实现SML中的类型推导) - Lambda Not Found</title>
+  <meta name="author" content="Tim Shen">
+
+  
+  <meta name="description" content="SML是一门静态类型语言, 但是将值绑定新变量的时候可以不指定变量的类型. 这意味着每个变量都是&#8221;尽可能地宽松&#8221;, 比如变量x, 开始时为范型&#8217;a, 但是编译器扫到一个a+1的表达式之后, 会自动把x的类型约束为int, 因为加号+的类型是int * int &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://innocentim.github.io/blog/2013/04/12/coursera-prolang-2">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Lambda Not Found" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Lambda Not Found</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:innocentim.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Coursera Prolang总结2(实现SML中的类型推导)</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-12T09:27:00+08:00" pubdate data-updated="true">Apr 12<span>th</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>SML是一门静态类型语言, 但是将值绑定新变量的时候可以不指定变量的类型. 这意味着每个变量都是&#8221;尽可能地宽松&#8221;, 比如变量x, 开始时为范型&#8217;a, 但是编译器扫到一个a+1的表达式之后, 会自动把x的类型约束为int, 因为加号+的类型是int * int -> int, 即吃一个(int, int)的元组, 返回一个int.</p>
+
+<p>于是自动类型推导就成为一个有意思的活. 我刻意不去查阅相关资料, 做了些思考.</p>
+
+<p>要解决的问题是: 给定n个函数定义, 要推导出这n个函数的类型, 包括参数类型和返回类型.</p>
+
+<p>可以采用待定系数法类似的思路, 先设n个函数各类型为不同的范型参数a1, r1, a2, r2 &#8230; an, rn.</p>
+
+<p>现在, n个函数体就是对这2n个变量的约束. 函数体是一个表达式. 表达式分为if, let, case &#8230;等, 还有函数调用. 每个表达式都有可能包含一些别的表达式.</p>
+
+<p>if产生的约束比较简单, 即要求condition的返回值类型是bool, 要求then分支的返回值类型等于else分支的返回值类型.</p>
+
+<p>let也比较简单, 即binding的类型为相应expression返回类型; 整个表达式返回类型为in块中表达式返回类型.</p>
+
+<p>case稍微复杂些. 首先, patterns能对一个未完全确定的变量(通常是参数或其一部分)提供约束, 这部分在Coursera Prolang的作业中出现; 另外必须保证所有分支的expression的返回值一样, 并且这就是case表达式的返回类型.</p>
+
+<p>函数调用是比较意思的地方. 我们只需要整理出一个巨大的约束集即可, 集合的每个元素形式是: 类型A要能接受类型B. 这里的A和B都可以是&#8221;未完成推导的&#8221;, 也可是是完成了的. 无论如何, A和B都将变成A和B的交集. 这种变化会产生连锁效应, 所以我们应该紧接着更新A的邻居和B的邻居. 这用教科书的话说叫Bellman-Ford, 用咱们的话说叫SPFA :P. 最终当迭代到不动的时候, 推导就完成了.</p>
+
+<p>所以我们需要能将两个类型求交集的能力. 我们把类型们分为两种: 已推导出和未推导出. 已推导出的肯定不能动; 未推导出的会把自己下降到能满足已推导约束的地步, 并且尽量lenient(Dan用的这个词). 如果两个都未推导出来, 那就互相下降自己的分支来满足对方相应的分支(一个类型的结构是一棵树); 当两个范型碰头的时候, 他们会变成同一个.</p>
+
+<p>然后我觉得就没有然后了. 可惜暂时不会去实现它>.&lt;</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Tim Shen</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-12T09:27:00+08:00" pubdate data-updated="true">Apr 12<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/coursera/'>Coursera</a>, <a class='category' href='/blog/categories/sml/'>SML</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://innocentim.github.io/blog/2013/04/12/coursera-prolang-2/" data-via="innocentim" data-counturl="http://innocentim.github.io/blog/2013/04/12/coursera-prolang-2/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/04/10/coursera-prolang-3/" title="Previous Post: Coursera Prolang总结3(Haskell的type class)">&laquo; Coursera Prolang总结3(Haskell的type class)</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/04/12/coursera-prolang-1/" title="Next Post: Coursera Prolang总结1(SML)">Coursera Prolang总结1(SML) &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/04/12/coursera-prolang-1/">Coursera Prolang总结1(SML)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/04/12/coursera-prolang-2/">Coursera Prolang总结2(实现SML中的类型推导)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/04/10/coursera-prolang-3/">Coursera Prolang总结3(Haskell的type class)</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/innocentim">@innocentim</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'innocentim',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Tim Shen -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'tshen91';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://innocentim.github.io/blog/2013/04/12/coursera-prolang-2/';
+        var disqus_url = 'http://innocentim.github.io/blog/2013/04/12/coursera-prolang-2/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

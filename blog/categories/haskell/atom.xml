@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Haskell | Lambda Not Found]]></title>
+  <link href="http://innocentim.github.io/blog/categories/haskell/atom.xml" rel="self"/>
+  <link href="http://innocentim.github.io/"/>
+  <updated>2013-04-12T21:32:39+08:00</updated>
+  <id>http://innocentim.github.io/</id>
+  <author>
+    <name><![CDATA[Tim Shen]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Coursera Prolang总结3(Haskell的type class)]]></title>
+    <link href="http://innocentim.github.io/blog/2013/04/10/coursera-prolang-3/"/>
+    <updated>2013-04-10T20:48:00+08:00</updated>
+    <id>http://innocentim.github.io/blog/2013/04/10/coursera-prolang-3</id>
+    <content type="html"><![CDATA[<p>Dan说如果时间允许, Haskell也将被讨论. 当然, 时间总是不允许的.</p>
+
+<p>于是我看完SML之后就很不知趣地去啃Haskell. 然后我现在就是一个接触Haskell累计不超过一周的水货, 但是这并不妨碍我发表一些无关痛痒/<em>咦?</em>/的并且很有可能失偏颇的断章取义的评论. Haskell和SML有不少相似的地方, 但是我今天想讨论的是其不同的地方. 最大的不同, 在我看来, 是Haskell允许用户定义type class.</p>
+
+<p>有两个基本的前置科技要点 : 模板(C++)/泛型(Java或SML)和纯虚类(C++)/接口(Java).</p>
+
+<p>我某天就遇到了Haskell的type class:</p>
+
+<p>``` hs
+class Eq a where</p>
+
+<pre><code>(==) :: a -&gt; a -&gt; Bool
+(/=) :: a -&gt; a -&gt; Bool
+x == y = not (x /= y)
+x /= y = not (x == y)
+</code></pre>
+
+<p>```</p>
+
+<p>上一片代码描述了<em>一类类型</em>, 此类类型的值可以和同类比较是否相等. 代码逻辑由该类型自己实现(如同实现一个接口). 如果我们实现一个列表类型, 其相等操作是递归地比较每个相同位置的元素, 只有每个相对元素都相等时列表才相等:</p>
+
+<p>``` hs
+data MyList a = Cons a (MyList a) | Empty</p>
+
+<p>instance (Eq k) => Eq (MyList k) where</p>
+
+<pre><code>Cons a as == Cons b bs = (a == b) &amp;&amp; (as == bs)
+Empty == Empty = True
+_ == _ = False
+</code></pre>
+
+<p>```</p>
+
+<p>data定义了列表类型(风格和SML一致); 而下面的instance表示MyList对于每个可比较的类型参数k, 可以定义自己的比较函数, 从而让自身成为可比较类型. 下面的where里是一个简单的pattern matching, 和SML的case一致.</p>
+
+<p>如果没法获得一个确切的直观的印象, 请看Java版:</p>
+
+<p>``` java
+interface Eq<T> {</p>
+
+<pre><code>public boolean equal(T b);
+</code></pre>
+
+<p>}</p>
+
+<p>abstract class List<T extends Eq<T>> implements Eq&lt;List<T>> {</p>
+
+<pre><code>abstract public boolean equal(List&lt;T&gt; a);
+abstract protected boolean equalEmpty();
+abstract protected boolean equalCons(Cons&lt;T&gt; a);
+</code></pre>
+
+<p>}</p>
+
+<p>class Cons<T extends Eq<T>> extends List<T> {</p>
+
+<pre><code>private T data;
+private List&lt;T&gt; next;
+
+public Cons(T data, List&lt;T&gt; next) {
+    this.data = data;
+    this.next = next;
+}
+
+@Override
+public boolean equal(List&lt;T&gt; b) {
+    return b.equalCons(this);
+}
+
+@Override
+protected boolean equalCons(Cons&lt;T&gt; cons) {
+    return data.equal(cons.data) &amp;&amp; next.equal(cons.next);
+}
+
+@Override
+protected boolean equalEmpty() {
+    return false;
+}
+</code></pre>
+
+<p>}</p>
+
+<p>class Empty<T extends Eq<T>> extends List<T> {</p>
+
+<pre><code>@Override
+public boolean equal(List&lt;T&gt; b) {
+    return b.equalEmpty();
+}
+
+@Override
+protected boolean equalCons(Cons&lt;T&gt; data) {
+    return false;
+}
+
+@Override
+protected boolean equalEmpty() {
+    return true;
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>不幸的是这个例子包含了不止一个知识 : <strong>double dispatch</strong>和<strong>bounded polymorphism</strong>. 但是反正这些东西都挺有意思的, 不妨一并学了吧:</p>
+
+<p><strong>double dispatch</strong> : 这个例子中, List有两种实际情况 : <code>Cons</code>和<code>Empty</code>. 于是<code>equal</code>事实上是一个多态函数 : <code>Cons</code>和<code>Cons</code>比, <code>Cons</code>和<code>Empty</code>比, <code>Empty</code>和<code>Cons</code>比, <code>Empty</code>和<code>Empty</code>比. 考虑<code>someEmpty.equal(b)</code>的状况, 我并不知道<code>a</code>是<code>Empty</code>还是<code>Cons</code>, 虽然我知道自己是<code>Empty</code>; 我们必须写4个辅助函数来实现这四位的逻辑, 然后在<code>equal</code>中只做<code>dispatch</code>. 这时候我们就要做第二次dispatch(跳<code>equal</code>虚函数是第一次), 执行<code>b.equalEmpty()</code>来告诉b, 有个<code>Empty</code>要跟你比. 和Dan的观点一致, 我觉得这丑暴了. 一个函数最好<em>do one thing and do it well</em>, 这本来连成一片的逻辑, 最好还是用一个大的<code>switch (type)</code>来解决. 这肯定会被说"不够OOP", 不过反正我不稀罕...</p>
+
+<p><strong>bounded polymorphism</strong> : 很简单 ------ 泛型参数不再是接受类型全集. 过去Java里有<code>class ClassName&lt;T&gt;</code>, 现在有这样的写法 : <code>class ClassName&lt;T extends ClassName2&gt;</code>. 这就提醒编译器<code>T</code>是可以被限制的. 这样T也就可以使用<code>ClassName2</code>所拥有的功能了. C++里对应的概念就叫concepts, 不过还没进入标准>.&lt;</p>
+
+<p>Java可以通过泛型接口来实现type class. 但是这不完全一样 :</p>
+
+<p>1) 为了达成和double dispatch一样的功能, Haskell的类型系统有BNF风格的机制, 直接秒杀继承机制;</p>
+
+<p>2) 为了达成"类型A is-a 类型B", Haskell没有像Java那样通过继承(实现接口), 而是通过泛型参数的传入(List is-a Eq). 区别在哪呢? 直观地讲, Java里总有个甩不掉的this, 而Haskell里没有. 为什么要有this呢? 没有this就是一个全局函数(Java里没有, C++里有); 不知道这个函数属于哪个类, 就算这个函数实现了某个接口里的方法, 也不知道哪个类能使用这个接口, 即没法提供"A is a B"这样的信息, 由于A的缺失; 那反正只要想个办法把A搞出来就行了. Mixin是一个不错的尝试, 它允许让用户指定一个函数属于多个类来产生类型约束, 但是这还是没有脱离让用户指定"这个函数属于某个类"来在实现接口的时候提供有用的类型约束. Haskell的提供约束的方式 ------ 现在很显然了 ------ 通过类型推导自动确定! 因为我们很容易判断一个函数原型是不是另一个函数原型的具体化. 比如lessThan(int, int)就是lessThan(T, T)的具体化(T是泛型). 这就为"类型int就是lessThan所属的那个type class的一个成员"提供了支持.</p>
+
+<p>所以总结一下, type class 是这样的 :
+是泛型接口, 但是不是靠继承(即把this这个参数揪出来瞎搞)来产生接口约束, 而是靠泛型参数来产生.</p>
+
+<p>现在, 你看到了继承机制的生硬的设定了么?</p>
+
+<p>如果我们把a.b(c)看成b(a, c), 那么类型系统会<em>仅</em>通过第一个参数的类型来产生各种约束. 为什么C++/Java要通过这种近乎hack的手段来突破类型系统呢? 啊哈, 原来是C++/Java不会做类型推导! 确实, C++的模板参数在很多情况下, 明明能推导出来, 但是就是要你手填T_T.</p>
+
+<p>在有强大的类型推导的语言里, 我们完全可以通过更灵活的策略来产生约束, 正如Haskell做的那样.</p>
+]]></content>
+  </entry>
+  
+</feed>
