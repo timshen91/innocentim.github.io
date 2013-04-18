@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Haskell | Lambda Not Found]]></title>
   <link href="http://innocentim.github.io/blog/categories/haskell/atom.xml" rel="self"/>
   <link href="http://innocentim.github.io/"/>
-  <updated>2013-04-12T22:40:32+08:00</updated>
+  <updated>2013-04-18T11:40:00+08:00</updated>
   <id>http://innocentim.github.io/</id>
   <author>
     <name><![CDATA[Tim Shen]]></name>
@@ -123,7 +123,7 @@ protected boolean equalEmpty() {
 
 <p>不幸的是这个例子包含了不止一个知识 : <strong>double dispatch</strong>和<strong>bounded polymorphism</strong>. 但是反正这些东西都挺有意思的, 不妨一并学了吧:</p>
 
-<p><strong>double dispatch</strong> : 这个例子中, List有两种实际情况 : <code>Cons</code>和<code>Empty</code>. 于是<code>equal</code>事实上是一个多态函数 : <code>Cons</code>和<code>Cons</code>比, <code>Cons</code>和<code>Empty</code>比, <code>Empty</code>和<code>Cons</code>比, <code>Empty</code>和<code>Empty</code>比. 考虑<code>someEmpty.equal(b)</code>的状况, 我并不知道<code>a</code>是<code>Empty</code>还是<code>Cons</code>, 虽然我知道自己是<code>Empty</code>; 我们必须写4个辅助函数来实现这四位的逻辑, 然后在<code>equal</code>中只做<code>dispatch</code>. 这时候我们就要做第二次dispatch(跳<code>equal</code>虚函数是第一次), 执行<code>b.equalEmpty()</code>来告诉b, 有个<code>Empty</code>要跟你比. 和Dan的观点一致, 我觉得这丑暴了. 一个函数最好<em>do one thing and do it well</em>, 这本来连成一片的逻辑, 最好还是用一个大的<code>switch (type)</code>来解决. 这肯定会被说"不够OOP", 不过反正我不稀罕...</p>
+<p><strong>double dispatch</strong> : 这个例子中, List有两种实际情况 : <code>Cons</code>和<code>Empty</code>. 于是<code>equal</code>事实上是一个多态函数 : <code>Cons</code>和<code>Cons</code>比, <code>Cons</code>和<code>Empty</code>比, <code>Empty</code>和<code>Cons</code>比, <code>Empty</code>和<code>Empty</code>比. 考虑<code>someEmpty.equal(b)</code>的状况, 我并不知道<code>b</code>是<code>Empty</code>还是<code>Cons</code>, 虽然我知道自己是<code>Empty</code>; 我们必须写4个辅助函数来实现这四位的逻辑, 然后在<code>equal</code>中只做<code>dispatch</code>. 这时候我们就要做第二次dispatch(跳<code>equal</code>虚函数是第一次), 执行<code>b.equalEmpty()</code>来告诉b, 有个<code>Empty</code>要跟你比. 和Dan的观点一致, 我觉得这丑暴了. 一个函数最好<em>do one thing and do it well</em>, 这本来连成一片的逻辑, 最好还是用一个大的<code>switch (type)</code>来解决. 这肯定会被说"不够OOP", 不过反正我不稀罕...</p>
 
 <p><strong>bounded polymorphism</strong> : 很简单 ------ 泛型参数不再是接受类型全集. 过去Java里有<code>class ClassName&lt;T&gt;</code>, 现在有这样的写法 : <code>class ClassName&lt;T extends ClassName2&gt;</code>. 这就提醒编译器<code>T</code>是可以被限制的. 这样T也就可以使用<code>ClassName2</code>所拥有的功能了. C++里对应的概念就叫concepts, 不过还没进入标准>.&lt;</p>
 
