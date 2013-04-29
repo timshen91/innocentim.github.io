@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Go | Lambda Not Found]]></title>
   <link href="http://innocentim.github.io/blog/categories/go/atom.xml" rel="self"/>
   <link href="http://innocentim.github.io/"/>
-  <updated>2013-04-25T17:27:09+08:00</updated>
+  <updated>2013-04-29T17:43:48+08:00</updated>
   <id>http://innocentim.github.io/</id>
   <author>
     <name><![CDATA[Tim Shen]]></name>
@@ -18,7 +18,7 @@
     <link href="http://innocentim.github.io/blog/2013/04/25/less-is-exponentially-more/"/>
     <updated>2013-04-25T16:44:00+08:00</updated>
     <id>http://innocentim.github.io/blog/2013/04/25/less-is-exponentially-more</id>
-    <content type="html"><![CDATA[<p>看到<a href="http://www.yinwang.org/blog-cn/2013/04/24/go-language/">王垠的blog</a>, 我坐不住了, 准备借机炒个冷饭. 我批评王垠的思路和"我喜欢香蕉, 你给个我苹果, 然后你说你为我付出了很多"很像. 另外一如既往地, 废话很多. 唯一一句有用的话就是"Go 语言里面有很多新的和好的东西。可惜新的东西都不是好的，好的东西都不是新的". 很抱歉, Go的设计哲学就是组合, 崇尚正交, 用最小的原子集合提供优雅强大的表达能力; 所以我们看到的新的点不多, 但是新的组合不少.</p>
+    <content type="html"><![CDATA[<p>看到<a href="http://www.yinwang.org/blog-cn/2013/04/24/go-language/">王垠的blog</a>, 我坐不住了, 准备借机炒个冷饭. 我批评王垠的思路和"我喜欢香蕉, 你给个我苹果, 然后你说你为我付出了很多"很像. 另外一如既往地, 废话很多. 很抱歉, Go的设计哲学就是组合, 崇尚正交, 用最小的原子集合提供优雅强大的表达能力; 所以我们看到的新的点不多, 但是新的组合不少.</p>
 
 <p>Rob Pike这篇文章有点老了, 而且我也翻译得颇生涩. 戳<a href="http://commandcenter.blogspot.com/2012/06/less-is-exponentially-more.html">这里</a>看原文.</p>
 
